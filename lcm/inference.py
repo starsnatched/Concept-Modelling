@@ -4,7 +4,8 @@ from .encoder import StreamingEncoder
 from .segmenter import Segmenter
 from .rvq import ResidualVectorQuantizer
 from .store import ConceptStore
-from .denoiser import ConceptDenoiser
+from .planner import ConceptPlanner
+from .realizer import ByteDiffusionDecoder
 from .utils import get_device
 
 class StreamingInference:
@@ -14,7 +15,8 @@ class StreamingInference:
         self.segmenter = Segmenter(hidden_dim).to(self.device)
         self.rvq = ResidualVectorQuantizer(codebook_size, hidden_dim, levels).to(self.device)
         self.store = ConceptStore(hidden_dim)
-        self.denoiser = ConceptDenoiser(latent_dim, latent_len).to(self.device)
+        self.planner = ConceptPlanner(latent_dim, latent_len).to(self.device)
+        self.realizer = ByteDiffusionDecoder(latent_dim).to(self.device)
         self.state: torch.Tensor | None = None
 
     def process(self, data: bytes, steps: int = 2, k: int = 4):
@@ -36,5 +38,6 @@ class StreamingInference:
             retrieved_torch = torch.tensor(retrieved_vectors, dtype=torch.float32, device=self.device)
         else:
             retrieved_torch = None
-        self.denoiser(features, retrieved_torch, steps)
-        return segments, metas
+        plan = self.planner(features, retrieved_torch, steps)
+        output = self.realizer.sample(plan)
+        return segments, metas, output
