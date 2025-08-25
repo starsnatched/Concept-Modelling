@@ -34,7 +34,14 @@ segments, metadata, output = pipeline.process(b"example text")
 
 ```python
 from lcm.training import train
-train("corpus.txt", epochs=1)
+train("corpus.txt", epochs=1, model_dir="models")
+```
+
+## Chat
+
+```python
+from lcm.chat import chat
+chat("models")
 ```
 
 ## Testing
