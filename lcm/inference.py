@@ -5,18 +5,20 @@ from .segmenter import Segmenter
 from .rvq import ResidualVectorQuantizer
 from .store import ConceptStore
 from .denoiser import ConceptDenoiser
+from .utils import get_device
 
 class StreamingInference:
-    def __init__(self, hidden_dim: int = 512, codebook_size: int = 1024, levels: int = 2, latent_dim: int = 512, latent_len: int = 128):
-        self.encoder = StreamingEncoder(hidden_dim)
-        self.segmenter = Segmenter(hidden_dim)
-        self.rvq = ResidualVectorQuantizer(codebook_size, hidden_dim, levels)
+    def __init__(self, hidden_dim: int = 512, codebook_size: int = 1024, levels: int = 2, latent_dim: int = 512, latent_len: int = 128, device: torch.device | None = None):
+        self.device = device or get_device()
+        self.encoder = StreamingEncoder(hidden_dim).to(self.device)
+        self.segmenter = Segmenter(hidden_dim).to(self.device)
+        self.rvq = ResidualVectorQuantizer(codebook_size, hidden_dim, levels).to(self.device)
         self.store = ConceptStore(hidden_dim)
-        self.denoiser = ConceptDenoiser(latent_dim, latent_len)
+        self.denoiser = ConceptDenoiser(latent_dim, latent_len).to(self.device)
         self.state: torch.Tensor | None = None
 
     def process(self, data: bytes, steps: int = 2, k: int = 4):
-        byte_tensor = torch.tensor(list(data), dtype=torch.long).unsqueeze(0)
+        byte_tensor = torch.tensor(list(data), dtype=torch.long, device=self.device).unsqueeze(0)
         features, self.state = self.encoder(byte_tensor, self.state)
         segments = self.segmenter.segment(features[0])
         vectors = []
@@ -31,7 +33,7 @@ class StreamingInference:
             self.store.insert(stacked, metas)
             _, indices, _ = self.store.lookup(stacked, k)
             retrieved_vectors = stacked[indices].reshape(1, -1, stacked.shape[1])
-            retrieved_torch = torch.tensor(retrieved_vectors, dtype=torch.float32)
+            retrieved_torch = torch.tensor(retrieved_vectors, dtype=torch.float32, device=self.device)
         else:
             retrieved_torch = None
         self.denoiser(features, retrieved_torch, steps)

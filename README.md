@@ -14,6 +14,12 @@ Concept Modelling provides a modular pipeline for byte-level language processing
 - `lcm.inference.StreamingInference`
 - `lcm.training`
 
+## Setup
+
+```bash
+pip install -r requirements.txt
+```
+
 ## Usage
 
 ```python
