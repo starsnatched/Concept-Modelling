@@ -2,16 +2,17 @@
 
 ## Overview
 
-Concept Modelling implements a modular pipeline for streaming language processing without sequence limits. It encodes byte streams, segments concepts, quantizes representations, retrieves from an external store, and denoises with latent reasoning.
+Concept Modelling provides a modular pipeline for byte-level language processing. It encodes streams, segments spans, quantizes embeddings, retrieves related concepts, and denoises representations.
 
 ## Modules
 
-- `lcm.encoder.StreamingEncoder` processes byte sequences with a recurrent backbone.
-- `lcm.segmenter.Segmenter` infers span boundaries and pools segment features.
-- `lcm.rvq.ResidualVectorQuantizer` compresses embeddings using residual vector quantization.
-- `lcm.store.ConceptStore` persists concept vectors with approximate nearest neighbor search.
-- `lcm.denoiser.ConceptDenoiser` refines local and retrieved representations through attention-based latent updates.
-- `lcm.inference.StreamingInference` coordinates the full pipeline for online processing.
+- `lcm.encoder.StreamingEncoder`
+- `lcm.segmenter.Segmenter`
+- `lcm.rvq.ResidualVectorQuantizer`
+- `lcm.store.ConceptStore`
+- `lcm.denoiser.ConceptDenoiser`
+- `lcm.inference.StreamingInference`
+- `lcm.training`
 
 ## Usage
 
@@ -21,6 +22,16 @@ pipeline = StreamingInference()
 segments, metadata = pipeline.process(b"example text")
 ```
 
+## Training
+
+```python
+from lcm.training import train
+train("corpus.txt", epochs=1)
+```
+
 ## Testing
 
-`pytest` runs the pipeline sanity check.
+```bash
+pytest -q
+```
+The test prints segments, metadata, and decoded text.
