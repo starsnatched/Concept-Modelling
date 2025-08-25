@@ -20,3 +20,7 @@ def test_process_runs() -> None:
     print("Metas:", metas)
     print("Decoded:", decoded)
     print("Output bytes length:", len(output))
+
+if __name__ == "__main__":
+    test_process_runs()
+    print("Test completed successfully.")
