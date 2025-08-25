@@ -8,7 +8,7 @@ def decode_segments(data: bytes, segments: list[tuple[int, int]]) -> list[str]:
 
 def test_process_runs() -> None:
     pipeline = StreamingInference()
-    data = b"hello world"
+    data = b"Hello, world!"
     segments, metas, output = pipeline.process(data)
     decoded = decode_segments(data, segments)
     assert isinstance(segments, list)
@@ -18,7 +18,7 @@ def test_process_runs() -> None:
     assert len(decoded) == len(segments)
     print("Segments:", segments)
     print("Metas:", metas)
-    print("Decoded:", decoded)
+    print("Decoded:", "".join(decoded))
     print("Output bytes length:", len(output))
 
 if __name__ == "__main__":
