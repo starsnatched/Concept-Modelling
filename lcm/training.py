@@ -4,6 +4,7 @@ from torch.utils.data import Dataset, DataLoader
 from .encoder import StreamingEncoder
 from .segmenter import Segmenter
 from .rvq import ResidualVectorQuantizer
+from .utils import get_device
 
 class CorpusDataset(Dataset):
     def __init__(self, path: str, seq_len: int = 128):
@@ -15,22 +16,24 @@ class CorpusDataset(Dataset):
         chunk = self.data[idx:idx + self.seq_len]
         return torch.tensor(list(chunk), dtype=torch.long)
 
-def build_models() -> tuple[StreamingEncoder, Segmenter, ResidualVectorQuantizer]:
-    encoder = StreamingEncoder()
-    segmenter = Segmenter()
-    rvq = ResidualVectorQuantizer(1024, 512, 2)
+def build_models(device: torch.device) -> tuple[StreamingEncoder, Segmenter, ResidualVectorQuantizer]:
+    encoder = StreamingEncoder().to(device)
+    segmenter = Segmenter().to(device)
+    rvq = ResidualVectorQuantizer(1024, 512, 2).to(device)
     return encoder, segmenter, rvq
 
 def train(corpus_path: str, epochs: int = 1, batch_size: int = 32, seq_len: int = 128) -> None:
+    device = get_device()
     dataset = CorpusDataset(corpus_path, seq_len)
     loader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
-    encoder, segmenter, rvq = build_models()
+    encoder, segmenter, rvq = build_models(device)
     params = list(encoder.parameters()) + list(segmenter.parameters()) + list(rvq.parameters())
     optimizer = torch.optim.Adam(params)
     for _ in range(epochs):
         for batch in loader:
+            batch = batch.to(device)
             features, _ = encoder(batch)
-            loss = torch.tensor(0.0)
+            loss = torch.tensor(0.0, device=device)
             for i in range(batch.size(0)):
                 segs = segmenter.segment(features[i])
                 pooled = [segmenter.pool(features[i], s, e) for s, e in segs]

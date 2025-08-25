@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class StreamingEncoder(nn.Module):
     def __init__(self, hidden_dim: int = 512):
         super().__init__()
@@ -13,6 +14,7 @@ class StreamingEncoder(nn.Module):
         return out, state
 
     def step(self, byte: int, state: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor]:
-        x = torch.tensor([[byte]], dtype=torch.long)
+        device = self.embed.weight.device
+        x = torch.tensor([[byte]], dtype=torch.long, device=device)
         out, state = self.forward(x, state)
         return out[:, -1], state
